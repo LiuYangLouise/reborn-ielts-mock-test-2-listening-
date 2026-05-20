@@ -55,14 +55,13 @@
             margin-top: 6px;
         }
 
-        .audio-section, .instruction-box, .questions-panel {
+        .instruction-box, .questions-panel {
             background: var(--panel-white);
             border-radius: 28px;
             box-shadow: var(--shadow-sm);
             border: 1px solid var(--border-light);
             margin-bottom: 24px;
         }
-        .audio-section { padding: 16px 24px; }
         .instruction-box, .questions-panel { padding: 20px 28px; }
 
         .group { border: 1px solid var(--border-light); border-radius: 20px; padding: 18px 22px; margin: 24px 0; }
@@ -70,7 +69,7 @@
         .instructions { background: var(--bg-soft); padding: 10px 14px; border-radius: 14px; margin-bottom: 20px; }
         p { margin: 12px 0; line-height: 1.7; }
         label { display: block; margin: 10px 0; cursor: pointer; }
-        input[type="radio"], input[type="checkbox"] { margin-right: 8px; accent-color: var(--primary-green); }
+        input[type="radio"], input[type="checkbox"] { margin-right: 8px; accent-color: var(--primary-green); cursor: pointer; }
         input.blank, input.blank-input {
             border: 1.5px solid var(--border-light);
             border-radius: 8px;
@@ -203,7 +202,7 @@
         ul { margin-left: 20px; }
         li { margin: 8px 0; line-height: 1.6; }
         .radio-option { margin: 12px 0; display: flex; align-items: center; gap: 8px; }
-        .radio-option label { margin: 0; }
+        .radio-option label { margin: 0; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -419,6 +418,7 @@
     ];
     let seqIndex = 0;
     let globalAllFinished = false;
+    let audioStartedByUser = false;  // 确保用户交互后播放
 
     function showToast(msg) { let t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1500); }
     function formatTime(sec) { let m=Math.floor(sec/60), s=sec%60; return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; }
@@ -430,7 +430,6 @@
         else document.getElementById('globalTimerDisplay').classList.remove('timer-red');
     }
 
-    // 根据用户提供的准确文件名匹配音频
     async function tryLoadAudioForPart(part) {
         const fileNames = {
             part1: 'P1 Wedding arrangements',
@@ -468,19 +467,24 @@
         activeAudio = audio;
         activeAudio.currentTime = 0;
         let startTime = Date.now();
-        // 重要：必须等待用户交互后才能播放，但这里可以自动播放（浏览器策略：若页面无用户交互则可能被阻止）
-        // 但是 HTML 标准要求音频播放必须由用户手势触发。我们这里设置一个全局"启动考试"按钮？原题目没有。
-        // 但为了符合用户期望"自动播放"，我们尝试直接播放，若被浏览器阻止则提示点击任意位置启动。
+        
+        // 自动播放尝试 + 用户交互后备
         let playPromise = activeAudio.play();
         if(playPromise !== undefined) {
             playPromise.catch(e => {
-                showToast("Click anywhere to start audio (browser autoplay policy)");
-                document.body.addEventListener('click', function once() {
-                    if(activeAudio && activeAudio.paused) activeAudio.play();
-                    document.body.removeEventListener('click', once);
-                }, { once: true });
+                showToast("Click anywhere on the page to start the audio");
+                const startHandler = () => {
+                    if(activeAudio && activeAudio.paused) {
+                        activeAudio.play().catch(err=>console.log);
+                    }
+                    document.body.removeEventListener('click', startHandler);
+                    document.body.removeEventListener('touchstart', startHandler);
+                };
+                document.body.addEventListener('click', startHandler);
+                document.body.addEventListener('touchstart', startHandler);
             });
         }
+        
         let checkInterval = setInterval(() => {
             if(!activeAudio) { clearInterval(checkInterval); return; }
             if(partFinished[seg.part]) { activeAudio.pause(); activeAudio=null; clearInterval(checkInterval); seqIndex++; startSequentialAudio(); return; }
@@ -541,9 +545,9 @@
             for(let i=21;i<=25;i++) { let u=answers[`q${i}`]||'—'; let c=PART3_KEYS.single[`q${i}`]; let isCorrect=u===c; html+=`<tr><td style="font-weight:600">${i}</td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td>`; }
             for(let i=26;i<=30;i++) { let u=answers[`q${i}`]||'—'; let c=PART3_KEYS.matching[`q${i}`]; let isCorrect=u===c; html+=`<tr><td style="font-weight:600">${i}</td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td>`; }
         } else if(part==='part4') {
-            for(let i=31;i<=40;i++) { let u=answers[`q${i}`]||'—'; let c=PART4_KEYS[`q${i}`]; let isCorrect=u.toLowerCase()===c.toLowerCase(); html+=`<td><td style="font-weight:600">${i}</td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td>`; }
+            for(let i=31;i<=40;i++) { let u=answers[`q${i}`]||'—'; let c=PART4_KEYS[`q${i}`]; let isCorrect=u.toLowerCase()===c.toLowerCase(); html+=`<tr><td style="font-weight:600">${i}</td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td>`; }
         }
-        html+=`</tbody><table>`;
+        html+=`</tbody></table>`;
         let resDiv = document.querySelector(`#${part} .results-in-page`); if(resDiv) resDiv.innerHTML = html;
     }
 
@@ -554,14 +558,15 @@
         else if(part==='part2') inner = PART2_HTML;
         else if(part==='part3') inner = PART3_HTML;
         else inner = PART4_HTML;
-        container.innerHTML = `<div class="instruction-box"><h3>📌 Test Instructions</h3><p>• Audio plays automatically in sequence (browser may require first click).<br>• After all audio ends, 2-min review then auto-submit.<br>• Click Early Submit to finish current part early; others continue.</p></div><div class="questions-panel">${inner}</div>`;
+        container.innerHTML = `<div class="instruction-box"><h3>📌 Test Instructions</h3><p>• Audio plays automatically in sequence (click if blocked).<br>• After all audio ends, 2-min review then auto-submit.<br>• Click Early Submit to finish current part early; others continue.</p></div><div class="questions-panel">${inner}</div>`;
         attachEventsForPart(part);
         if(partFinished[part]) disablePartInputs(part);
     }
 
     function attachEventsForPart(part) {
-        document.querySelectorAll(`#${part} input.blank, #${part} input.blank-input`).forEach(inp=>{ inp.oninput=()=>saveLocal(); });
-        document.querySelectorAll(`#${part} input[type="radio"]`).forEach(rad=>{ rad.onchange=()=>saveLocal(); });
+        // 确保所有输入框可用
+        document.querySelectorAll(`#${part} input.blank, #${part} input.blank-input`).forEach(inp=>{ inp.disabled = false; inp.oninput=()=>saveLocal(); });
+        document.querySelectorAll(`#${part} input[type="radio"]`).forEach(rad=>{ rad.disabled = false; rad.onchange=()=>saveLocal(); });
         document.querySelectorAll(`#${part} .drag-option`).forEach(opt=>opt.setAttribute('draggable','true'));
         let slots = document.querySelectorAll(`#${part} .match-slot`);
         slots.forEach(slot=>{ slot.ondragover=e=>e.preventDefault(); slot.ondrop=e=>{ e.preventDefault(); let val=e.dataTransfer.getData('text/plain'); let opt=document.querySelector(`.drag-option[data-value="${val}"]`); if(opt && !partFinished[part]){ let tag=document.createElement('span'); tag.className='tag'; tag.dataset.value=val; tag.textContent=opt.textContent; slot.innerHTML=''; slot.appendChild(tag); slot.classList.add('filled'); opt.classList.add('hidden-in-pool'); saveLocal(); } }; });
