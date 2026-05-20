@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Reborn新生留学 · IELTS Listening Full Mock Test</title>
+    <title>Reborn新生留学 · IELTS Listening Mock Test · Set 2</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -209,7 +209,7 @@
 <body>
 <div class="master-container">
     <div class="reborn-header">
-        <h1>🌿 Reborn新生留学 · IELTS Listening Mock Test</h1>
+        <h1>🌿 Reborn新生留学 · IELTS Listening Mock Test · Set 2</h1>
         <p>Wedding · Eye Saver · Maori Carving · Antikythera Mechanism | Full timed exam</p>
     </div>
 
@@ -278,7 +278,7 @@
     const PART1_KEYS = { q1:'city', q2:'photos', q3:'round', q4:'decorations', q5:'menu', q6:'sandwiches', q7:'5995', q8:'cake', q9:'izard' };
     function isDateCorrect(u) { let n = u.trim().toLowerCase(); return /^october\s+15$|^october\s+15th$|^15\s+october$|^15th\s+october$/.test(n); }
 
-    // Part 2: Eye Saver Charity (完全保留原始样式，选择题 + 拖拽匹配)
+    // Part 2: Eye Saver Charity
     const PART2_HTML = `
         <div class="group">
             <h4>Questions 11-16</h4>
@@ -333,7 +333,7 @@
     `;
     const PART2_KEYS = { single: { q11:'B', q12:'A', q13:'C', q14:'A', q15:'A', q16:'B' }, matching: { q17:'E', q18:'D', q19:'C', q20:'B' } };
 
-    // Part 3: Maori Carving (保留原始样式，选择题+拖拽匹配)
+    // Part 3: Maori Carving
     const PART3_HTML = `
         <div class="group">
             <h4>Questions 21-25</h4>
@@ -384,7 +384,7 @@
     `;
     const PART3_KEYS = { single: { q21:'A', q22:'C', q23:'B', q24:'C', q25:'B' }, matching: { q26:'C', q27:'A', q28:'D', q29:'E', q30:'B' } };
 
-    // Part 4: Antikythera Mechanism (完全保留原始排版，填空形式)
+    // Part 4: Antikythera Mechanism
     const PART4_HTML = `
         <div class="group">
             <h4>Questions 31-40</h4>
@@ -430,18 +430,26 @@
         else document.getElementById('globalTimerDisplay').classList.remove('timer-red');
     }
 
+    // 根据用户提供的准确文件名匹配音频
     async function tryLoadAudioForPart(part) {
-        const possibleNames = {
-            part1: ['P1 Wedding arrangements', 'P1 Wedding Arrangements'],
-            part2: ['P2 Eye Saver Charity'],
-            part3: ['P3 Maori Carving'],
-            part4: ['P4 The Antikythera mechanism']
+        const fileNames = {
+            part1: 'P1 Wedding arrangements',
+            part2: 'P2 Eye Saver Charity',
+            part3: 'P3 Maori Carving',
+            part4: 'P4 The Antikythera mechanism'
         };
-        for(let name of possibleNames[part]) {
-            for(let ext of ['.mp3','.m4a','.mp4']) {
-                let url = `${name}${ext}`;
-                try { let res = await fetch(url, {method:'HEAD'}); if(res.ok) { let audio = new Audio(url); return audio; } } catch(e){}
-            }
+        const baseName = fileNames[part];
+        const exts = ['.mp3', '.m4a', '.mp4'];
+        for(let ext of exts) {
+            const url = `${baseName}${ext}`;
+            try {
+                const res = await fetch(url, { method: 'HEAD' });
+                if(res.ok) {
+                    const audio = new Audio(url);
+                    audio.preload = 'auto';
+                    return audio;
+                }
+            } catch(e) { /* continue */ }
         }
         return null;
     }
@@ -455,12 +463,24 @@
         currentPart = seg.part;
         switchPartUI(currentPart);
         let audio = await tryLoadAudioForPart(currentPart);
-        if(!audio) { showToast(`No audio for ${currentPart}, skipping`); seqIndex++; startSequentialAudio(); return; }
-        if(activeAudio) { activeAudio.pause(); activeAudio=null; }
+        if(!audio) { showToast(`Audio not found: ${currentPart}, skipping`); seqIndex++; startSequentialAudio(); return; }
+        if(activeAudio) { activeAudio.pause(); activeAudio = null; }
         activeAudio = audio;
         activeAudio.currentTime = 0;
         let startTime = Date.now();
-        activeAudio.play();
+        // 重要：必须等待用户交互后才能播放，但这里可以自动播放（浏览器策略：若页面无用户交互则可能被阻止）
+        // 但是 HTML 标准要求音频播放必须由用户手势触发。我们这里设置一个全局"启动考试"按钮？原题目没有。
+        // 但为了符合用户期望"自动播放"，我们尝试直接播放，若被浏览器阻止则提示点击任意位置启动。
+        let playPromise = activeAudio.play();
+        if(playPromise !== undefined) {
+            playPromise.catch(e => {
+                showToast("Click anywhere to start audio (browser autoplay policy)");
+                document.body.addEventListener('click', function once() {
+                    if(activeAudio && activeAudio.paused) activeAudio.play();
+                    document.body.removeEventListener('click', once);
+                }, { once: true });
+            });
+        }
         let checkInterval = setInterval(() => {
             if(!activeAudio) { clearInterval(checkInterval); return; }
             if(partFinished[seg.part]) { activeAudio.pause(); activeAudio=null; clearInterval(checkInterval); seqIndex++; startSequentialAudio(); return; }
@@ -513,17 +533,17 @@
     function displayResultsForPart(part, answers) {
         let html = '<h4>📊 Answer Review</h4><table class="results-table"><thead><tr><th>Question</th><th>Your Answer</th><th>Correct Answer</th><th>Result</th></tr></thead><tbody>';
         if(part==='part1') {
-            for(let i=1;i<=10;i++) { let u=answers[`q${i}`]||'—'; let c = (i===10) ? 'October 15 / 15 October' : PART1_KEYS[`q${i}`]; let isCorrect=(i===10)?isDateCorrect(u):u.toLowerCase()===c.toLowerCase(); html+=`<tr><td><b>${i}</b></td><td>${escapeHtml(u)}</td><td>${escapeHtml(c)}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td></tr>`; }
+            for(let i=1;i<=10;i++) { let u=answers[`q${i}`]||'—'; let c = (i===10) ? 'October 15 / 15 October' : PART1_KEYS[`q${i}`]; let isCorrect=(i===10)?isDateCorrect(u):u.toLowerCase()===c.toLowerCase(); html+=`<tr><td style="font-weight:600">${i}</td><td>${escapeHtml(u)}</td><td>${escapeHtml(c)}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td>`; }
         } else if(part==='part2') {
-            for(let i=11;i<=16;i++) { let u=answers[`q${i}`]||'—'; let c=PART2_KEYS.single[`q${i}`]; let isCorrect=u===c; html+=`<tr><td><b>${i}</b></td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td></tr>`; }
-            for(let i=17;i<=20;i++) { let u=answers[`q${i}`]||'—'; let c=PART2_KEYS.matching[`q${i}`]; let isCorrect=u===c; html+=`<tr><td><b>${i}</b></td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td></tr>`; }
+            for(let i=11;i<=16;i++) { let u=answers[`q${i}`]||'—'; let c=PART2_KEYS.single[`q${i}`]; let isCorrect=u===c; html+=`<tr><td style="font-weight:600">${i}</td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td>`; }
+            for(let i=17;i<=20;i++) { let u=answers[`q${i}`]||'—'; let c=PART2_KEYS.matching[`q${i}`]; let isCorrect=u===c; html+=`<tr><td style="font-weight:600">${i}</td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td>`; }
         } else if(part==='part3') {
-            for(let i=21;i<=25;i++) { let u=answers[`q${i}`]||'—'; let c=PART3_KEYS.single[`q${i}`]; let isCorrect=u===c; html+=`<tr><td><b>${i}</b></td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td></tr>`; }
-            for(let i=26;i<=30;i++) { let u=answers[`q${i}`]||'—'; let c=PART3_KEYS.matching[`q${i}`]; let isCorrect=u===c; html+=`<tr><td><b>${i}</b></td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td></tr>`; }
+            for(let i=21;i<=25;i++) { let u=answers[`q${i}`]||'—'; let c=PART3_KEYS.single[`q${i}`]; let isCorrect=u===c; html+=`<tr><td style="font-weight:600">${i}</td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td>`; }
+            for(let i=26;i<=30;i++) { let u=answers[`q${i}`]||'—'; let c=PART3_KEYS.matching[`q${i}`]; let isCorrect=u===c; html+=`<tr><td style="font-weight:600">${i}</td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td>`; }
         } else if(part==='part4') {
-            for(let i=31;i<=40;i++) { let u=answers[`q${i}`]||'—'; let c=PART4_KEYS[`q${i}`]; let isCorrect=u.toLowerCase()===c.toLowerCase(); html+=`<tr><td><b>${i}</b></td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td></tr>`; }
+            for(let i=31;i<=40;i++) { let u=answers[`q${i}`]||'—'; let c=PART4_KEYS[`q${i}`]; let isCorrect=u.toLowerCase()===c.toLowerCase(); html+=`<td><td style="font-weight:600">${i}</td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td>`; }
         }
-        html+=`</tbody></table>`;
+        html+=`</tbody><table>`;
         let resDiv = document.querySelector(`#${part} .results-in-page`); if(resDiv) resDiv.innerHTML = html;
     }
 
@@ -534,7 +554,7 @@
         else if(part==='part2') inner = PART2_HTML;
         else if(part==='part3') inner = PART3_HTML;
         else inner = PART4_HTML;
-        container.innerHTML = `<div class="instruction-box"><h3>📌 Test Instructions</h3><p>• Audio plays automatically in sequence. No pause/seek during first play.<br>• After all audio ends, 2-min review then auto-submit.<br>• Click Early Submit to finish current part early; others continue.</p></div><div class="questions-panel">${inner}</div>`;
+        container.innerHTML = `<div class="instruction-box"><h3>📌 Test Instructions</h3><p>• Audio plays automatically in sequence (browser may require first click).<br>• After all audio ends, 2-min review then auto-submit.<br>• Click Early Submit to finish current part early; others continue.</p></div><div class="questions-panel">${inner}</div>`;
         attachEventsForPart(part);
         if(partFinished[part]) disablePartInputs(part);
     }
