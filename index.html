@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Reborn新生留学 · IELTS Listening Full Mock Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-soft: #f0f7f5;
+            --panel-white: #ffffff;
+            --primary-green: #0F6B6B;
+            --primary-light: #e0f0f0;
+            --border-light: #d4e2e2;
+            --text-dark: #1f3a3a;
+            --text-soft: #2a5f5f;
+            --shadow-sm: 0 8px 20px rgba(0,0,0,0.05);
+            --answered-bg: #e0f2f0;
+            --answered-border: #0F6B6B;
+            --correct-bg: #dcfce7;
+            --correct-border: #4ade80;
+            --incorrect-bg: #fee2e2;
+            --incorrect-border: #f87171;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e8f2f2 0%, #d4e6e6 100%);
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            color: var(--text-dark);
+            padding: 24px 28px;
+            min-height: 100vh;
+        }
+
+        .master-container { max-width: 1200px; margin: 0 auto; }
+
+        .reborn-header {
+            background: var(--panel-white);
+            border-radius: 32px;
+            padding: 18px 28px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-light);
+            text-align: center;
+        }
+        .reborn-header h1 {
+            font-weight: 700;
+            font-size: 28px;
+            color: var(--primary-green);
+            margin: 0;
+        }
+        .reborn-header p {
+            font-size: 14px;
+            color: var(--text-soft);
+            margin-top: 6px;
+        }
+
+        .audio-section, .instruction-box, .questions-panel {
+            background: var(--panel-white);
+            border-radius: 28px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-light);
+            margin-bottom: 24px;
+        }
+        .audio-section { padding: 16px 24px; }
+        .instruction-box, .questions-panel { padding: 20px 28px; }
+
+        .group { border: 1px solid var(--border-light); border-radius: 20px; padding: 18px 22px; margin: 24px 0; }
+        .group h4 { color: var(--primary-green); font-weight: 600; margin-bottom: 12px; font-size: 1.2rem; }
+        .instructions { background: var(--bg-soft); padding: 10px 14px; border-radius: 14px; margin-bottom: 20px; }
+        p { margin: 12px 0; line-height: 1.7; }
+        label { display: block; margin: 10px 0; cursor: pointer; }
+        input[type="radio"], input[type="checkbox"] { margin-right: 8px; accent-color: var(--primary-green); }
+        input.blank, input.blank-input {
+            border: 1.5px solid var(--border-light);
+            border-radius: 8px;
+            padding: 6px 12px;
+            width: 150px;
+            font-size: 0.95rem;
+            background: var(--bg-soft);
+            transition: all 0.2s;
+            margin: 0 6px;
+        }
+        input.blank:focus, input.blank-input:focus { outline: none; border-color: var(--primary-green); box-shadow: 0 0 0 2px var(--primary-light); }
+
+        .match-row { display: flex; align-items: center; gap: 20px; margin: 18px 0; flex-wrap: wrap; }
+        .match-q { font-weight: 600; min-width: 280px; }
+        .match-slot {
+            min-width: 280px;
+            min-height: 46px;
+            background: var(--bg-soft);
+            border: 2px dashed var(--border-light);
+            border-radius: 30px;
+            padding: 6px 14px;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        .match-slot.filled { background: var(--primary-light); border: 1px solid var(--primary-green); }
+        .tag {
+            background: var(--primary-green);
+            color: white;
+            padding: 5px 14px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: grab;
+            display: inline-block;
+        }
+        .drag-pool {
+            background: var(--bg-soft);
+            padding: 16px;
+            border-radius: 20px;
+            min-width: 280px;
+            border: 1px solid var(--border-light);
+            margin-top: 20px;
+        }
+        .drag-option {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 30px;
+            padding: 10px 14px;
+            margin: 10px 0;
+            cursor: grab;
+        }
+        .matching-layout { display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; }
+
+        .bottom-bar {
+            margin-top: 20px; display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 15px; background: var(--panel-white); border-radius: 60px;
+            padding: 12px 24px; border: 1px solid var(--border-light);
+            position: sticky;
+            bottom: 16px;
+            z-index: 80;
+        }
+        .bb-center { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .early-submit { background: #c97e5a; color: white; border: none; padding: 8px 16px; border-radius: 32px; cursor: pointer; font-weight: 500; }
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 24px;
+        }
+        .results-table th, .results-table td {
+            border: 1px solid var(--border-light);
+            padding: 12px 16px;
+            text-align: left;
+            vertical-align: middle;
+        }
+        .results-table th { background: var(--bg-soft); font-weight: 600; }
+        .result-correct { color: #15803d; font-weight: 600; background: var(--correct-bg); }
+        .result-incorrect { color: #b91c1c; font-weight: 600; background: var(--incorrect-bg); }
+
+        .part-tabs-bottom {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .part-btn {
+            background: var(--panel-white);
+            border: 1px solid var(--primary-green);
+            color: var(--primary-green);
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .part-btn.active {
+            background: var(--primary-green);
+            color: white;
+        }
+        .part-container {
+            display: none;
+        }
+        .part-container.active-part {
+            display: block;
+        }
+        #toast { position: fixed; bottom: 90px; right: 24px; background: var(--primary-green); color: white; padding: 10px 20px; border-radius: 40px; opacity: 0; transition: 0.2s; z-index: 1000; }
+        #toast.show { opacity: 1; }
+        .hl { background: #fff59d; }
+        .hl-blue { background: #CEDDFE; cursor: pointer; }
+        #selbar { position: absolute; background: white; border: 1px solid #ccc; border-radius: 10px; padding: 6px; gap: 6px; display: inline-flex; z-index: 101; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        #selbar[hidden] { display: none; }
+        #selbar button { border: 1px solid #ccc; border-radius: 8px; padding: 4px 12px; background: #f0f0f0; cursor: pointer; }
+        .note-card { background: var(--panel-white); border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border-light); }
+        .note-quote { font-weight: 500; margin-bottom: 10px; padding: 6px; background: var(--bg-soft); border-radius: 8px; }
+        .note-card textarea { width: 100%; min-height: 60px; padding: 8px; border-radius: 8px; border: 1px solid var(--border-light); background: var(--bg-soft); }
+        .note-actions button { background: transparent; border: 1px solid #f87171; color: #b91c1c; border-radius: 20px; padding: 4px 12px; margin-top: 8px; cursor: pointer; }
+        body.notes-open { padding-right: 420px; }
+        #notes { position: fixed; right: -420px; top: 0; bottom: 0; width: 420px; background: var(--bg-soft); border-left: 1px solid var(--border-light); transition: right 0.25s ease; z-index: 99; display: flex; flex-direction: column; }
+        body.notes-open #notes { right: 0; }
+        .side-panel-header { display: flex; justify-content: space-between; padding: 12px 16px; background: var(--panel-white); border-bottom: 1px solid var(--border-light); font-weight: 600; }
+        #notes-list { overflow-y: auto; padding: 12px; flex: 1; }
+        #toggle-notes-btn { background: var(--bg-soft); border: 1px solid var(--border-light); border-radius: 30px; padding: 6px 14px; cursor: pointer; }
+        @media (max-width: 768px) { .match-slot { min-width: 200px; } .bb-center { justify-content: center; } }
+        .timer-red { color: #d9534f; font-weight: bold; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .disabled-inputs input, .disabled-inputs .drag-option, .disabled-inputs .tag { pointer-events: none; opacity: 0.7; background: #eef2f2; }
+        .disabled-inputs label, .disabled-inputs .match-slot { pointer-events: none; opacity: 0.7; }
+        ul { margin-left: 20px; }
+        li { margin: 8px 0; line-height: 1.6; }
+        .radio-option { margin: 12px 0; display: flex; align-items: center; gap: 8px; }
+        .radio-option label { margin: 0; }
+    </style>
+</head>
+<body>
+<div class="master-container">
+    <div class="reborn-header">
+        <h1>🌿 Reborn新生留学 · IELTS Listening Mock Test</h1>
+        <p>Wedding · Eye Saver · Maori Carving · Antikythera Mechanism | Full timed exam</p>
+    </div>
+
+    <div id="part1" class="part-container active-part"></div>
+    <div id="part2" class="part-container"></div>
+    <div id="part3" class="part-container"></div>
+    <div id="part4" class="part-container"></div>
+
+    <div class="part-tabs-bottom" id="partTabsBottom">
+        <button class="part-btn active" data-part="part1">Part 1 · Wedding Arrangements</button>
+        <button class="part-btn" data-part="part2">Part 2 · Eye Saver Charity</button>
+        <button class="part-btn" data-part="part3">Part 3 · Maori Carving</button>
+        <button class="part-btn" data-part="part4">Part 4 · Antikythera Mechanism</button>
+    </div>
+
+    <div class="bottom-bar">
+        <div class="bb-center">
+            <span id="globalTimerDisplay">00:00</span>
+            <button id="globalEarlySubmit" class="early-submit">Early Submit (Current Part)</button>
+            <button id="globalSaveBtn">Save Progress</button>
+            <button id="globalClearBtn">Clear All</button>
+            <button id="globalNotesBtn">📝 Notes</button>
+        </div>
+    </div>
+</div>
+<div id="notes">
+    <div class="side-panel-header"><span>📔 My Notes</span><button id="notes-close" style="background:none; border:none; font-size:24px; cursor:pointer;">&times;</button></div>
+    <div id="notes-list"></div>
+</div>
+<div id="selbar" hidden><button data-act="hl">✨ Highlight</button><button data-act="note">📝 Note</button><button data-act="del">🗑️ Clear</button></div>
+<div id="toast">Saved</div>
+
+<script>
+    // ====================== 四套题目原始HTML (完全保留原排版) ======================
+    // Part 1: Wedding Arrangements
+    const PART1_HTML = `
+        <div class="group">
+            <h4>Questions 1-10</h4>
+            <p class="instructions">Complete the notes below.<br>Write <b>ONE WORD AND/OR A NUMBER</b> for each answer.</p>
+            <h5 style="color:var(--primary-green); margin: 8px 0 4px;">Wedding arrangements – Clarence House Hotel</h5>
+            <p>Available date: <strong>1st June</strong></p>
+            <p><strong>The Oxford Suite has:</strong></p>
+            <ul>
+                <li>- a dining room with a good view of the <strong>1</strong> <input type="text" name="q1" class="blank" autocomplete="off"></li>
+                <li>- a private garden for <strong>2</strong> <input type="text" name="q2" class="blank" autocomplete="off"> and for the wedding ceremony</li>
+                <li>- an area suitable for dancing</li>
+            </ul>
+            <p><strong>The wedding package includes:</strong></p>
+            <ul>
+                <li>- use of the Oxford Suite</li>
+                <li>- a three-course meal</li>
+                <li>- room arranged with <strong>3</strong> <input type="text" name="q3" class="blank" autocomplete="off"> tables</li>
+                <li>- table <strong>4</strong> <input type="text" name="q4" class="blank" autocomplete="off"> included</li>
+                <li>- white tablecloths and chairs</li>
+                <li>- personalized printed <strong>5</strong> <input type="text" name="q5" class="blank" autocomplete="off"></li>
+                <li>- a late-evening buffet with a choice of <strong>6</strong> <input type="text" name="q6" class="blank" autocomplete="off"> and hot drinks</li>
+            </ul>
+            <p><strong>Music:</strong> hotel will organise a band (not included in price)</p>
+            <p>Total cost of package: £ <strong>7</strong> <input type="text" name="q7" class="blank" autocomplete="off"></p>
+            <p>Can also recommend a <strong>8</strong> <input type="text" name="q8" class="blank" autocomplete="off"> supplier (new company)</p>
+            <p>Wedding coordinator Sarah <strong>9</strong> <input type="text" name="q9" class="blank" autocomplete="off"></p>
+            <p>Date arranged for visit: <strong>10</strong> <input type="text" name="q10" class="blank" autocomplete="off"> at 11.30 a.m.</p>
+        </div>
+        <div class="results-in-page"></div>
+    `;
+    const PART1_KEYS = { q1:'city', q2:'photos', q3:'round', q4:'decorations', q5:'menu', q6:'sandwiches', q7:'5995', q8:'cake', q9:'izard' };
+    function isDateCorrect(u) { let n = u.trim().toLowerCase(); return /^october\s+15$|^october\s+15th$|^15\s+october$|^15th\s+october$/.test(n); }
+
+    // Part 2: Eye Saver Charity (完全保留原始样式，选择题 + 拖拽匹配)
+    const PART2_HTML = `
+        <div class="group">
+            <h4>Questions 11-16</h4>
+            <p class="instructions">Choose the correct letter, <b>A</b>, <b>B</b> or <b>C</b>.</p>
+            <p><b>11</b> When was Eyesaver founded?</p>
+            <label><input type="radio" name="q11" value="A"> <b>A</b> 15 years ago</label>
+            <label><input type="radio" name="q11" value="B"> <b>B</b> 30 years ago</label>
+            <label><input type="radio" name="q11" value="C"> <b>C</b> 60 years ago</label>
+            <p><b>12</b> What was the original aim of the program?</p>
+            <label><input type="radio" name="q12" value="A"> <b>A</b> to offer common equipment</label>
+            <label><input type="radio" name="q12" value="B"> <b>B</b> to offer medication to children with eye diseases</label>
+            <label><input type="radio" name="q12" value="C"> <b>C</b> to offer operational help to people who had eye problems</label>
+            <p><b>13</b> The main funding comes from</p>
+            <label><input type="radio" name="q13" value="A"> <b>A</b> a monthly donation.</label>
+            <label><input type="radio" name="q13" value="B"> <b>B</b> donation from rich people.</label>
+            <label><input type="radio" name="q13" value="C"> <b>C</b> money collected on the street.</label>
+            <p><b>14</b> What does the speaker expect listeners to provide?</p>
+            <label><input type="radio" name="q14" value="A"> <b>A</b> glasses for the patients</label>
+            <label><input type="radio" name="q14" value="B"> <b>B</b> money donation</label>
+            <label><input type="radio" name="q14" value="C"> <b>C</b> voluntary work</label>
+            <p><b>15</b> What is the main purpose of this program?</p>
+            <label><input type="radio" name="q15" value="A"> <b>A</b> to show people their donation can make a difference</label>
+            <label><input type="radio" name="q15" value="B"> <b>B</b> to show people how easily eye problems can be cured</label>
+            <label><input type="radio" name="q15" value="C"> <b>C</b> to educate people about common eye diseases</label>
+            <p><b>16</b> Eyesaver advertises for the program through</p>
+            <label><input type="radio" name="q16" value="A"> <b>A</b> computers.</label>
+            <label><input type="radio" name="q16" value="B"> <b>B</b> recordings.</label>
+            <label><input type="radio" name="q16" value="C"> <b>C</b> training.</label>
+        </div>
+        <div class="group">
+            <h4>Questions 17-20</h4>
+            <p class="instructions">What role does each of the following organisations play for the development of Eyesaver?<br>Drag the correct letter <b>A-F</b> from the box to each organisation.</p>
+            <div class="matching-layout">
+                <div>
+                    <div class="match-row"><span class="match-q"><b>17</b> National Vision Funding Group</span><span class="match-slot" data-q="17"></span></div>
+                    <div class="match-row"><span class="match-q"><b>18</b> Eye for the Future</span><span class="match-slot" data-q="18"></span></div>
+                    <div class="match-row"><span class="match-q"><b>19</b> Sam's Eyecare Institution</span><span class="match-slot" data-q="19"></span></div>
+                    <div class="match-row"><span class="match-q"><b>20</b> Youth Health</span><span class="match-slot" data-q="20"></span></div>
+                </div>
+                <div class="drag-pool">
+                    <strong>Drag from here (reusable):</strong>
+                    <div class="drag-option" draggable="true" data-value="A">A gain more donation</div>
+                    <div class="drag-option" draggable="true" data-value="B">B involve more children in need</div>
+                    <div class="drag-option" draggable="true" data-value="C">C earn support from colleges</div>
+                    <div class="drag-option" draggable="true" data-value="D">D help look for equipment manufacturers</div>
+                    <div class="drag-option" draggable="true" data-value="E">E take the reputation to a higher level</div>
+                    <div class="drag-option" draggable="true" data-value="F">F recruit and support staff</div>
+                </div>
+            </div>
+        </div>
+        <div class="results-in-page"></div>
+    `;
+    const PART2_KEYS = { single: { q11:'B', q12:'A', q13:'C', q14:'A', q15:'A', q16:'B' }, matching: { q17:'E', q18:'D', q19:'C', q20:'B' } };
+
+    // Part 3: Maori Carving (保留原始样式，选择题+拖拽匹配)
+    const PART3_HTML = `
+        <div class="group">
+            <h4>Questions 21-25</h4>
+            <p class="instructions">Choose the correct letter, <b>A</b>, <b>B</b> or <b>C</b>.</p>
+            <p><b>21.</b> Amy and Mike agree that the greenstone tikis</p>
+            <label><input type="radio" name="q21" value="A"> <b>A</b> take great skill to produce.</label>
+            <label><input type="radio" name="q21" value="B"> <b>B</b> are fascinating curved shapes.</label>
+            <label><input type="radio" name="q21" value="C"> <b>C</b> have interesting stories behind them.</label>
+            <p><b>22.</b> According to Amy, why are so few genuine old tikis found on archaeological dig sites?</p>
+            <label><input type="radio" name="q22" value="A"> <b>A</b> Not many people know about them.</label>
+            <label><input type="radio" name="q22" value="B"> <b>B</b> They tend to be stolen by treasure hunters.</label>
+            <label><input type="radio" name="q22" value="C"> <b>C</b> The majority become inherited items.</label>
+            <p><b>23.</b> The Maori people considered tikis to be</p>
+            <label><input type="radio" name="q23" value="A"> <b>A</b> decorative items.</label>
+            <label><input type="radio" name="q23" value="B"> <b>B</b> religious objects.</label>
+            <label><input type="radio" name="q23" value="C"> <b>C</b> tribal symbols.</label>
+            <p><b>24.</b> Tikis are classified into one type or the other by</p>
+            <label><input type="radio" name="q24" value="A"> <b>A</b> where they originated.</label>
+            <label><input type="radio" name="q24" value="B"> <b>B</b> the materials used.</label>
+            <label><input type="radio" name="q24" value="C"> <b>C</b> the position of the body.</label>
+            <p><b>25.</b> How can modern reproductions be easily distinguished from genuine Maori carvings?</p>
+            <label><input type="radio" name="q25" value="A"> <b>A</b> The materials differ.</label>
+            <label><input type="radio" name="q25" value="B"> <b>B</b> They are too regular in shape.</label>
+            <label><input type="radio" name="q25" value="C"> <b>C</b> They are of different sizes.</label>
+        </div>
+        <div class="group">
+            <h4>Questions 26-30</h4>
+            <p class="instructions">What tool did Maoris use to carry out each of the following tasks?<br>Drag the correct letter <b>A-E</b> from the box to each task.</p>
+            <div class="matching-layout">
+                <div>
+                    <div class="match-row"><span class="match-q"><b>26</b> creating a blank</span><span class="match-slot" data-q="26"></span></div>
+                    <div class="match-row"><span class="match-q"><b>27</b> smoothing the surface</span><span class="match-slot" data-q="27"></span></div>
+                    <div class="match-row"><span class="match-q"><b>28</b> carving details</span><span class="match-slot" data-q="28"></span></div>
+                    <div class="match-row"><span class="match-q"><b>29</b> making holes</span><span class="match-slot" data-q="29"></span></div>
+                    <div class="match-row"><span class="match-q"><b>30</b> fixing coloured decorations</span><span class="match-slot" data-q="30"></span></div>
+                </div>
+                <div class="drag-pool">
+                    <strong>Drag from here (reusable):</strong>
+                    <div class="drag-option" draggable="true" data-value="A">A Sandstone block</div>
+                    <div class="drag-option" draggable="true" data-value="B">B Plant glue</div>
+                    <div class="drag-option" draggable="true" data-value="C">C Stone scoring tool</div>
+                    <div class="drag-option" draggable="true" data-value="D">D Bone point</div>
+                    <div class="drag-option" draggable="true" data-value="E">E Stick drill</div>
+                </div>
+            </div>
+        </div>
+        <div class="results-in-page"></div>
+    `;
+    const PART3_KEYS = { single: { q21:'A', q22:'C', q23:'B', q24:'C', q25:'B' }, matching: { q26:'C', q27:'A', q28:'D', q29:'E', q30:'B' } };
+
+    // Part 4: Antikythera Mechanism (完全保留原始排版，填空形式)
+    const PART4_HTML = `
+        <div class="group">
+            <h4>Questions 31-40</h4>
+            <p class="instructions">Write <b>ONE WORD ONLY</b> for each answer.</p>
+            <p><strong>The world's oldest mechanical computer: the Antikythera mechanism</strong></p>
+            <p><b>31</b> The Antikythera mechanism was discovered as part of a ship's <input type="text" name="q31" class="blank" autocomplete="off"> in the sea near Antikythera, Greece.</p>
+            <p>Initially, it was mistakenly thought to be a piece of <b>32</b> <input type="text" name="q32" class="blank" autocomplete="off">, but it was later found to be a mechanism that had broken into pieces.</p>
+            <p><b>Equipment used for analysis of the mechanism:</b><br>For its analysis, various equipment was used: the "Dome" produced photographs that made the <b>33</b> <input type="text" name="q33" class="blank" autocomplete="off"> clearer, and the "Blade-Runner" produced X-rays, originally used to identify <b>34</b> <input type="text" name="q34" class="blank" autocomplete="off"> in engines.</p>
+            <p><b>Description:</b><br>The mechanism consisted of over 30 gear wheels made of <b>35</b> <input type="text" name="q35" class="blank" autocomplete="off">, models of the sun, moon, and planets, and a framework made of <b>36</b> <input type="text" name="q36" class="blank" autocomplete="off">.</p>
+            <p><b>How the mechanism was used:</b><br>The operator turned a <b>37</b> <input type="text" name="q37" class="blank" autocomplete="off"> to move the gear wheels, allowing the sun, moon, and planets to be positioned correctly for any given date.</p>
+            <p>Most surprisingly, the mechanism could calculate when an <b>38</b> <input type="text" name="q38" class="blank" autocomplete="off"> would occur and may have been used as a <b>39</b> <input type="text" name="q39" class="blank" autocomplete="off"> for planning festivals.</p>
+            <p><b>Later use of similar technology:</b><br>Later, similar technology was used in the 13th and 14th centuries for making <b>40</b> <input type="text" name="q40" class="blank" autocomplete="off"> in Western Europe.</p>
+        </div>
+        <div class="results-in-page"></div>
+    `;
+    const PART4_KEYS = { q31:'cargo', q32:'rock', q33:'inscriptions', q34:'cracks', q35:'metal', q36:'wood', q37:'handle', q38:'eclipse', q39:'calendar', q40:'clocks' };
+
+    // ====================== 全局状态与音频顺序 ======================
+    let currentPart = 'part1';
+    let allAnswers = { part1:{}, part2:{}, part3:{}, part4:{} };
+    let partFinished = { part1:false, part2:false, part3:false, part4:false };
+    let activeAudio = null;
+    let testTimerInterval = null;
+    let testSeconds = 0;
+    let reviewMode = false;
+    let reviewSecondsLeft = 120;
+    let audioSequence = [
+        { part:'part1', duration: 480 },   // 8:00
+        { part:'part2', duration: 450 },   // 7:30
+        { part:'part3', duration: 446 },   // 7:26
+        { part:'part4', duration: 420 }    // 7:00
+    ];
+    let seqIndex = 0;
+    let globalAllFinished = false;
+
+    function showToast(msg) { let t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1500); }
+    function formatTime(sec) { let m=Math.floor(sec/60), s=sec%60; return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; }
+    function updateMainTimer() { 
+        let display = reviewMode ? `Review: ${formatTime(reviewSecondsLeft)}` : formatTime(testSeconds);
+        document.getElementById('globalTimerDisplay').innerHTML = display;
+        if(reviewMode && reviewSecondsLeft <= 0) { finalCollectiveSubmit(); }
+        if(reviewMode && reviewSecondsLeft <= 10) document.getElementById('globalTimerDisplay').classList.add('timer-red');
+        else document.getElementById('globalTimerDisplay').classList.remove('timer-red');
+    }
+
+    async function tryLoadAudioForPart(part) {
+        const possibleNames = {
+            part1: ['P1 Wedding arrangements', 'P1 Wedding Arrangements'],
+            part2: ['P2 Eye Saver Charity'],
+            part3: ['P3 Maori Carving'],
+            part4: ['P4 The Antikythera mechanism']
+        };
+        for(let name of possibleNames[part]) {
+            for(let ext of ['.mp3','.m4a','.mp4']) {
+                let url = `${name}${ext}`;
+                try { let res = await fetch(url, {method:'HEAD'}); if(res.ok) { let audio = new Audio(url); return audio; } } catch(e){}
+            }
+        }
+        return null;
+    }
+
+    function disablePartInputs(part) { document.getElementById(part)?.classList.add('disabled-inputs'); }
+
+    async function startSequentialAudio() {
+        if(seqIndex >= audioSequence.length) { if(!reviewMode) startReviewPeriod(); return; }
+        let seg = audioSequence[seqIndex];
+        if(partFinished[seg.part]) { seqIndex++; startSequentialAudio(); return; }
+        currentPart = seg.part;
+        switchPartUI(currentPart);
+        let audio = await tryLoadAudioForPart(currentPart);
+        if(!audio) { showToast(`No audio for ${currentPart}, skipping`); seqIndex++; startSequentialAudio(); return; }
+        if(activeAudio) { activeAudio.pause(); activeAudio=null; }
+        activeAudio = audio;
+        activeAudio.currentTime = 0;
+        let startTime = Date.now();
+        activeAudio.play();
+        let checkInterval = setInterval(() => {
+            if(!activeAudio) { clearInterval(checkInterval); return; }
+            if(partFinished[seg.part]) { activeAudio.pause(); activeAudio=null; clearInterval(checkInterval); seqIndex++; startSequentialAudio(); return; }
+            let elapsed = (Date.now() - startTime)/1000;
+            if(elapsed >= seg.duration || activeAudio.ended) {
+                clearInterval(checkInterval);
+                activeAudio.pause();
+                activeAudio = null;
+                seqIndex++;
+                startSequentialAudio();
+            }
+        }, 500);
+        activeAudio.onended = () => { clearInterval(checkInterval); activeAudio=null; seqIndex++; startSequentialAudio(); };
+    }
+
+    function startReviewPeriod() {
+        reviewMode = true;
+        testSeconds = 0;
+        reviewSecondsLeft = 120;
+        if(testTimerInterval) clearInterval(testTimerInterval);
+        testTimerInterval = setInterval(() => { if(reviewMode && reviewSecondsLeft>0) { reviewSecondsLeft--; updateMainTimer(); } else if(reviewSecondsLeft===0) finalCollectiveSubmit(); }, 1000);
+        updateMainTimer();
+        showToast("Review: 2 minutes. Auto-submit when time ends.");
+    }
+
+    function finalCollectiveSubmit() {
+        if(globalAllFinished) return;
+        if(testTimerInterval) clearInterval(testTimerInterval);
+        reviewMode = false;
+        for(let p of ['part1','part2','part3','part4']) {
+            if(!partFinished[p]) {
+                let answers = collectAnswersFromDOM(p);
+                allAnswers[p] = answers;
+                partFinished[p] = true;
+            }
+        }
+        for(let p of ['part1','part2','part3','part4']) displayResultsForPart(p, allAnswers[p]);
+        showToast("All sections submitted. Results displayed.");
+        globalAllFinished = true;
+    }
+
+    function collectAnswersFromDOM(part) {
+        let ans={};
+        document.querySelectorAll(`#${part} input.blank, #${part} input.blank-input`).forEach(inp=>{ ans[inp.name]=inp.value.trim(); });
+        document.querySelectorAll(`#${part} input[type="radio"]:checked`).forEach(rad=>{ ans[rad.name]=rad.value; });
+        document.querySelectorAll(`#${part} .match-slot .tag`).forEach(tag=>{ let q=tag.closest('.match-slot').dataset.q; ans[`q${q}`]=tag.dataset.value; });
+        return ans;
+    }
+
+    function displayResultsForPart(part, answers) {
+        let html = '<h4>📊 Answer Review</h4><table class="results-table"><thead><tr><th>Question</th><th>Your Answer</th><th>Correct Answer</th><th>Result</th></tr></thead><tbody>';
+        if(part==='part1') {
+            for(let i=1;i<=10;i++) { let u=answers[`q${i}`]||'—'; let c = (i===10) ? 'October 15 / 15 October' : PART1_KEYS[`q${i}`]; let isCorrect=(i===10)?isDateCorrect(u):u.toLowerCase()===c.toLowerCase(); html+=`<tr><td><b>${i}</b></td><td>${escapeHtml(u)}</td><td>${escapeHtml(c)}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td></tr>`; }
+        } else if(part==='part2') {
+            for(let i=11;i<=16;i++) { let u=answers[`q${i}`]||'—'; let c=PART2_KEYS.single[`q${i}`]; let isCorrect=u===c; html+=`<tr><td><b>${i}</b></td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td></tr>`; }
+            for(let i=17;i<=20;i++) { let u=answers[`q${i}`]||'—'; let c=PART2_KEYS.matching[`q${i}`]; let isCorrect=u===c; html+=`<tr><td><b>${i}</b></td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td></tr>`; }
+        } else if(part==='part3') {
+            for(let i=21;i<=25;i++) { let u=answers[`q${i}`]||'—'; let c=PART3_KEYS.single[`q${i}`]; let isCorrect=u===c; html+=`<tr><td><b>${i}</b></td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td></tr>`; }
+            for(let i=26;i<=30;i++) { let u=answers[`q${i}`]||'—'; let c=PART3_KEYS.matching[`q${i}`]; let isCorrect=u===c; html+=`<tr><td><b>${i}</b></td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td></tr>`; }
+        } else if(part==='part4') {
+            for(let i=31;i<=40;i++) { let u=answers[`q${i}`]||'—'; let c=PART4_KEYS[`q${i}`]; let isCorrect=u.toLowerCase()===c.toLowerCase(); html+=`<tr><td><b>${i}</b></td><td>${escapeHtml(u)}</td><td>${c}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td></tr>`; }
+        }
+        html+=`</tbody></table>`;
+        let resDiv = document.querySelector(`#${part} .results-in-page`); if(resDiv) resDiv.innerHTML = html;
+    }
+
+    function renderPart(part) {
+        let container = document.getElementById(part);
+        let inner = '';
+        if(part==='part1') inner = PART1_HTML;
+        else if(part==='part2') inner = PART2_HTML;
+        else if(part==='part3') inner = PART3_HTML;
+        else inner = PART4_HTML;
+        container.innerHTML = `<div class="instruction-box"><h3>📌 Test Instructions</h3><p>• Audio plays automatically in sequence. No pause/seek during first play.<br>• After all audio ends, 2-min review then auto-submit.<br>• Click Early Submit to finish current part early; others continue.</p></div><div class="questions-panel">${inner}</div>`;
+        attachEventsForPart(part);
+        if(partFinished[part]) disablePartInputs(part);
+    }
+
+    function attachEventsForPart(part) {
+        document.querySelectorAll(`#${part} input.blank, #${part} input.blank-input`).forEach(inp=>{ inp.oninput=()=>saveLocal(); });
+        document.querySelectorAll(`#${part} input[type="radio"]`).forEach(rad=>{ rad.onchange=()=>saveLocal(); });
+        document.querySelectorAll(`#${part} .drag-option`).forEach(opt=>opt.setAttribute('draggable','true'));
+        let slots = document.querySelectorAll(`#${part} .match-slot`);
+        slots.forEach(slot=>{ slot.ondragover=e=>e.preventDefault(); slot.ondrop=e=>{ e.preventDefault(); let val=e.dataTransfer.getData('text/plain'); let opt=document.querySelector(`.drag-option[data-value="${val}"]`); if(opt && !partFinished[part]){ let tag=document.createElement('span'); tag.className='tag'; tag.dataset.value=val; tag.textContent=opt.textContent; slot.innerHTML=''; slot.appendChild(tag); slot.classList.add('filled'); opt.classList.add('hidden-in-pool'); saveLocal(); } }; });
+        document.querySelectorAll(`#${part} .drag-option`).forEach(opt=>{ opt.ondragstart=e=>e.dataTransfer.setData('text/plain', opt.dataset.value); });
+    }
+
+    function saveLocal() { let data={ answers:allAnswers, finished:partFinished }; localStorage.setItem('reborn_mock_set2', JSON.stringify(data)); }
+    function loadLocal() { let raw=localStorage.getItem('reborn_mock_set2'); if(raw) try{ let d=JSON.parse(raw); allAnswers=d.answers||allAnswers; partFinished=d.finished||partFinished; }catch(e){} }
+
+    function switchPartUI(partId) {
+        currentPart=partId;
+        document.querySelectorAll('.part-container').forEach(div=>div.classList.remove('active-part'));
+        document.getElementById(partId).classList.add('active-part');
+        document.querySelectorAll('.part-btn').forEach(btn=>btn.classList.remove('active'));
+        document.querySelector(`.part-btn[data-part="${partId}"]`).classList.add('active');
+    }
+
+    function earlySubmitCurrent() {
+        if(globalAllFinished) { showToast("Test already finished."); return; }
+        if(partFinished[currentPart]) { showToast("This part already submitted."); return; }
+        if(confirm(`Early submit ${currentPart.toUpperCase()}? Audio stops for this part. Others continue.`)){
+            partFinished[currentPart] = true;
+            if(activeAudio && audioSequence[seqIndex] && audioSequence[seqIndex].part === currentPart) {
+                activeAudio.pause(); activeAudio = null;
+            }
+            let answers = collectAnswersFromDOM(currentPart);
+            allAnswers[currentPart] = answers;
+            disablePartInputs(currentPart);
+            showToast(`${currentPart.toUpperCase()} submitted early. Answers recorded.`);
+            if(seqIndex < audioSequence.length && audioSequence[seqIndex].part === currentPart) {
+                seqIndex++;
+                startSequentialAudio();
+            }
+            let allDone = true;
+            for(let p of ['part1','part2','part3','part4']) if(!partFinished[p]) allDone = false;
+            if(allDone && !reviewMode && !globalAllFinished) finalCollectiveSubmit();
+        }
+    }
+
+    function clearAll() { if(confirm('Reset all progress?')) { localStorage.removeItem('reborn_mock_set2'); location.reload(); } }
+
+    // 笔记系统
+    let selbar = document.getElementById('selbar'), currentRange=null;
+    function initNotes() {
+        document.addEventListener('mouseup', (e) => {
+            if(e.target.closest('#selbar, #notes')) return;
+            let sel = window.getSelection();
+            if(!sel.isCollapsed && sel.toString().trim()) {
+                currentRange = sel.getRangeAt(0);
+                let rect = currentRange.getBoundingClientRect();
+                selbar.hidden = false;
+                selbar.style.left = `${window.scrollX + rect.left + rect.width/2 - 80}px`;
+                selbar.style.top = `${window.scrollY + rect.top - 45}px`;
+            } else selbar.hidden = true;
+        });
+        selbar.addEventListener('click', (e) => {
+            let act = e.target.dataset.act;
+            if(!act || !currentRange) return;
+            if(act === 'hl') { let span = document.createElement('span'); span.className='hl'; try{ currentRange.surroundContents(span); }catch(e){} }
+            else if(act === 'note') {
+                let span = document.createElement('span'); span.className='hl-blue'; let hid='note_'+Date.now(); span.dataset.hid=hid;
+                try{
+                    currentRange.surroundContents(span);
+                    let card = document.createElement('div'); card.className='note-card'; card.dataset.hid=hid;
+                    card.innerHTML = `<div class="note-quote">${escapeHtml(span.textContent)}</div><textarea placeholder="Write note..."></textarea><div class="note-actions"><button data-del="${hid}">Delete</button></div>`;
+                    card.querySelector('button').onclick = () => { let t=document.querySelector(`[data-hid="${hid}"]`); if(t){ let txt=document.createTextNode(t.textContent); t.parentNode.replaceChild(txt,t); } card.remove(); saveLocal(); };
+                    card.querySelector('textarea').addEventListener('input',()=>saveLocal());
+                    document.getElementById('notes-list').prepend(card);
+                    document.body.classList.add('notes-open');
+                    saveLocal();
+                }catch(e){}
+            }
+            selbar.hidden=true; window.getSelection().removeAllRanges();
+        });
+        document.getElementById('toggle-notes-btn').onclick = () => document.body.classList.toggle('notes-open');
+        document.getElementById('notes-close').onclick = () => document.body.classList.remove('notes-open');
+        let saved = localStorage.getItem('reborn_mock_set2');
+        if(saved) try{ let d=JSON.parse(saved); if(d.notesHTML) document.getElementById('notes-list').innerHTML = d.notesHTML; }catch(e){}
+    }
+    function escapeHtml(s){ return s?s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])):''; }
+
+    async function init() {
+        for(let p of ['part1','part2','part3','part4']) renderPart(p);
+        loadLocal();
+        for(let p of ['part1','part2','part3','part4']) if(partFinished[p]) disablePartInputs(p);
+        document.getElementById('globalEarlySubmit').onclick = earlySubmitCurrent;
+        document.getElementById('globalSaveBtn').onclick = () => { saveLocal(); showToast('Progress saved'); };
+        document.getElementById('globalClearBtn').onclick = clearAll;
+        document.getElementById('globalNotesBtn').onclick = () => document.body.classList.toggle('notes-open');
+        document.querySelectorAll('.part-btn').forEach(btn => btn.onclick = () => switchPartUI(btn.dataset.part));
+        initNotes();
+        startSequentialAudio();
+    }
+    init();
+</script>
+</body>
+</html>
