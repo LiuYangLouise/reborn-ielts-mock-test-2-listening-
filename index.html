@@ -201,8 +201,6 @@
         .disabled-inputs label, .disabled-inputs .match-slot { pointer-events: none; opacity: 0.7; }
         ul { margin-left: 20px; }
         li { margin: 8px 0; line-height: 1.6; }
-        .radio-option { margin: 12px 0; display: flex; align-items: center; gap: 8px; }
-        .radio-option label { margin: 0; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -242,7 +240,7 @@
 <div id="toast">Saved</div>
 
 <script>
-    // ====================== 四套题目原始HTML (完全保留原排版) ======================
+    // ====================== 四套题目原始HTML ======================
     // Part 1: Wedding Arrangements
     const PART1_HTML = `
         <div class="group">
@@ -401,7 +399,7 @@
     `;
     const PART4_KEYS = { q31:'cargo', q32:'rock', q33:'inscriptions', q34:'cracks', q35:'metal', q36:'wood', q37:'handle', q38:'eclipse', q39:'calendar', q40:'clocks' };
 
-    // ====================== 全局状态与音频顺序 ======================
+    // ====================== 全局状态 ======================
     let currentPart = 'part1';
     let allAnswers = { part1:{}, part2:{}, part3:{}, part4:{} };
     let partFinished = { part1:false, part2:false, part3:false, part4:false };
@@ -411,14 +409,13 @@
     let reviewMode = false;
     let reviewSecondsLeft = 120;
     let audioSequence = [
-        { part:'part1', duration: 480 },   // 8:00
-        { part:'part2', duration: 450 },   // 7:30
-        { part:'part3', duration: 446 },   // 7:26
-        { part:'part4', duration: 420 }    // 7:00
+        { part:'part1', duration: 480, filename: 'P1 Wedding arrangements' },
+        { part:'part2', duration: 450, filename: 'P2 Eye Saver Charity' },
+        { part:'part3', duration: 446, filename: 'P3 Maori Carving' },
+        { part:'part4', duration: 420, filename: 'P4 The Antikythera mechanism' }
     ];
     let seqIndex = 0;
     let globalAllFinished = false;
-    let audioStartedByUser = false;  // 确保用户交互后播放
 
     function showToast(msg) { let t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1500); }
     function formatTime(sec) { let m=Math.floor(sec/60), s=sec%60; return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; }
@@ -430,17 +427,10 @@
         else document.getElementById('globalTimerDisplay').classList.remove('timer-red');
     }
 
-    async function tryLoadAudioForPart(part) {
-        const fileNames = {
-            part1: 'P1 Wedding arrangements',
-            part2: 'P2 Eye Saver Charity',
-            part3: 'P3 Maori Carving',
-            part4: 'P4 The Antikythera mechanism'
-        };
-        const baseName = fileNames[part];
+    async function tryLoadAudioForPart(part, filename) {
         const exts = ['.mp3', '.m4a', '.mp4'];
         for(let ext of exts) {
-            const url = `${baseName}${ext}`;
+            const url = `${filename}${ext}`;
             try {
                 const res = await fetch(url, { method: 'HEAD' });
                 if(res.ok) {
@@ -461,22 +451,20 @@
         if(partFinished[seg.part]) { seqIndex++; startSequentialAudio(); return; }
         currentPart = seg.part;
         switchPartUI(currentPart);
-        let audio = await tryLoadAudioForPart(currentPart);
-        if(!audio) { showToast(`Audio not found: ${currentPart}, skipping`); seqIndex++; startSequentialAudio(); return; }
+        let audio = await tryLoadAudioForPart(seg.part, seg.filename);
+        if(!audio) { showToast(`Audio not found: ${seg.filename}, skipping`); seqIndex++; startSequentialAudio(); return; }
         if(activeAudio) { activeAudio.pause(); activeAudio = null; }
         activeAudio = audio;
         activeAudio.currentTime = 0;
         let startTime = Date.now();
         
-        // 自动播放尝试 + 用户交互后备
+        // 尝试自动播放
         let playPromise = activeAudio.play();
         if(playPromise !== undefined) {
             playPromise.catch(e => {
-                showToast("Click anywhere on the page to start the audio");
+                showToast("Click anywhere to start the audio (browser autoplay policy)");
                 const startHandler = () => {
-                    if(activeAudio && activeAudio.paused) {
-                        activeAudio.play().catch(err=>console.log);
-                    }
+                    if(activeAudio && activeAudio.paused) activeAudio.play().catch(err=>console.log);
                     document.body.removeEventListener('click', startHandler);
                     document.body.removeEventListener('touchstart', startHandler);
                 };
@@ -564,7 +552,6 @@
     }
 
     function attachEventsForPart(part) {
-        // 确保所有输入框可用
         document.querySelectorAll(`#${part} input.blank, #${part} input.blank-input`).forEach(inp=>{ inp.disabled = false; inp.oninput=()=>saveLocal(); });
         document.querySelectorAll(`#${part} input[type="radio"]`).forEach(rad=>{ rad.disabled = false; rad.onchange=()=>saveLocal(); });
         document.querySelectorAll(`#${part} .drag-option`).forEach(opt=>opt.setAttribute('draggable','true'));
@@ -573,8 +560,8 @@
         document.querySelectorAll(`#${part} .drag-option`).forEach(opt=>{ opt.ondragstart=e=>e.dataTransfer.setData('text/plain', opt.dataset.value); });
     }
 
-    function saveLocal() { let data={ answers:allAnswers, finished:partFinished }; localStorage.setItem('reborn_mock_set2', JSON.stringify(data)); }
-    function loadLocal() { let raw=localStorage.getItem('reborn_mock_set2'); if(raw) try{ let d=JSON.parse(raw); allAnswers=d.answers||allAnswers; partFinished=d.finished||partFinished; }catch(e){} }
+    function saveLocal() { let data={ answers:allAnswers, finished:partFinished, notesHTML: document.getElementById('notes-list')?.innerHTML }; localStorage.setItem('reborn_mock_set2', JSON.stringify(data)); }
+    function loadLocal() { let raw=localStorage.getItem('reborn_mock_set2'); if(raw) try{ let d=JSON.parse(raw); allAnswers=d.answers||allAnswers; partFinished=d.finished||partFinished; if(d.notesHTML && document.getElementById('notes-list')) document.getElementById('notes-list').innerHTML = d.notesHTML; }catch(e){} }
 
     function switchPartUI(partId) {
         currentPart=partId;
@@ -643,8 +630,6 @@
         });
         document.getElementById('toggle-notes-btn').onclick = () => document.body.classList.toggle('notes-open');
         document.getElementById('notes-close').onclick = () => document.body.classList.remove('notes-open');
-        let saved = localStorage.getItem('reborn_mock_set2');
-        if(saved) try{ let d=JSON.parse(saved); if(d.notesHTML) document.getElementById('notes-list').innerHTML = d.notesHTML; }catch(e){}
     }
     function escapeHtml(s){ return s?s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])):''; }
 
