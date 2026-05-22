@@ -71,10 +71,14 @@
   }
   .global-timer {
     font-family: monospace;
-    font-size: 28px;
+    font-size: 20px;   /* smaller as requested */
     font-weight: 700;
     color: var(--primary-green);
-    letter-spacing: 2px;
+    letter-spacing: 1px;
+    background: var(--bg-soft);
+    padding: 4px 14px;
+    border-radius: 40px;
+    transition: color 0.1s;
   }
   .global-timer.warning {
     color: var(--timer-warning);
@@ -297,19 +301,37 @@
     p4: { q31:'cargo', q32:'rock', q33:'inscriptions', q34:'cracks', q35:'metal', q36:'wood', q37:'handle', q38:'eclipse', q39:'calendar', q40:'clocks' }
   };
 
+  // Durations in seconds: P1=480 (8:00), P2=450 (7:30), P3=446 (7:26), P4=420 (7:00)
   const DURATIONS = [480, 450, 446, 420];
+  const AUDIO_FILES = [
+    "P1 Wedding arrangements.mp3",
+    "P2 Eye Saver Charity.mp3",
+    "P3 Maori Carving.mp3",
+    "P4 The Antikythera mechanism.mp3"
+  ];
+
+  let audioElements = [null, null, null, null];
   let partStatus = { 1: { submitted: false, finishedAudio: false }, 2: { submitted: false, finishedAudio: false }, 3: { submitted: false, finishedAudio: false }, 4: { submitted: false, finishedAudio: false } };
   let globalTimerSeconds = 0, globalInterval = null;
   let scheduleTimeouts = [];
   let allPartsCompleted = false;
   let reviewTimeoutId = null;
+  let currentPlayingAudio = null;
+  let currentPartPlaying = 0;
 
   function showToast(msg) { let t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1500); }
-  function updateGlobalTimerDisplay() { let el=document.getElementById('globalTimerDisplay'); let m=Math.floor(globalTimerSeconds/60), s=globalTimerSeconds%60; el.textContent=`${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; if(globalTimerSeconds <= 120 && !allPartsCompleted && !reviewTimeoutId) el.classList.add('warning'); else el.classList.remove('warning'); }
+  function updateGlobalTimerDisplay() { 
+    let el=document.getElementById('globalTimerDisplay'); 
+    let m=Math.floor(globalTimerSeconds/60), s=globalTimerSeconds%60; 
+    el.textContent=`${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; 
+    if(reviewTimeoutId && !allPartsCompleted) el.classList.add('warning'); 
+    else el.classList.remove('warning');
+  }
 
   function markPartSubmitted(part) {
     if(partStatus[part].submitted) return;
     partStatus[part].submitted = true;
+    if(audioElements[part-1]) { audioElements[part-1].pause(); audioElements[part-1].currentTime = 0; }
     showToast(`Part ${part} submitted early.`);
     if(document.getElementById('partContainer').dataset.currentPart == part) document.getElementById('partContainer').classList.add('disabled-input');
     checkAllPartsCompletion();
@@ -430,15 +452,29 @@
     if(part===2 || part===3) initDragDropForPart();
   }
 
-  function startAudioSequence() {
-    let accumulated = 0;
-    for(let idx=0; idx<4; idx++) {
-      let partNum = idx+1;
-      let timeoutId = setTimeout(() => { if(!partStatus[partNum].submitted) markPartFinishedAudio(partNum); }, (accumulated + DURATIONS[idx]) * 1000);
+  function playSequentialAudio() {
+    let idx = 0;
+    function playNext() {
+      if(idx >= 4) return;
+      if(partStatus[idx+1].submitted) { idx++; playNext(); return; }
+      let audio = new Audio(AUDIO_FILES[idx]);
+      audioElements[idx] = audio;
+      currentPlayingAudio = audio;
+      currentPartPlaying = idx+1;
+      audio.play().catch(e => console.warn("Audio play error:", e));
+      let durationMs = DURATIONS[idx] * 1000;
+      let timeoutId = setTimeout(() => {
+        if(audio && !partStatus[idx+1].submitted) {
+          audio.pause();
+          audio.currentTime = 0;
+          markPartFinishedAudio(idx+1);
+        }
+        idx++;
+        playNext();
+      }, durationMs);
       scheduleTimeouts.push(timeoutId);
-      accumulated += DURATIONS[idx];
     }
-    globalInterval = setInterval(()=>{ if(!allPartsCompleted && !reviewTimeoutId) globalTimerSeconds++; updateGlobalTimerDisplay(); }, 1000);
+    playNext();
   }
 
   function earlySubmitAllHandler() {
@@ -454,7 +490,8 @@
     document.getElementById('globalEarlySubmitBtn').addEventListener('click', earlySubmitAllHandler);
     document.getElementById('toggle-notes-btn').addEventListener('click',()=>document.body.classList.toggle('notes-open'));
     document.getElementById('notes-close').addEventListener('click',()=>document.body.classList.remove('notes-open'));
-    startAudioSequence();
+    playSequentialAudio();
+    globalInterval = setInterval(()=>{ if(!allPartsCompleted && !reviewTimeoutId) globalTimerSeconds++; updateGlobalTimerDisplay(); }, 1000);
   }
   init();
 </script>
