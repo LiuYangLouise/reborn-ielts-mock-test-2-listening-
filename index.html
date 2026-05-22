@@ -71,7 +71,7 @@
   }
   .global-timer {
     font-family: monospace;
-    font-size: 20px;   /* smaller as requested */
+    font-size: 20px;
     font-weight: 700;
     color: var(--primary-green);
     letter-spacing: 1px;
@@ -253,6 +253,44 @@
   #notes-list { overflow-y: auto; padding: 12px; flex: 1; }
   #toggle-notes-btn { background: var(--bg-soft); border: 1px solid var(--border-light); border-radius: 30px; padding: 6px 14px; cursor: pointer; }
   @media (max-width: 768px) { .matching-flex { flex-direction: column; } .match-slot { min-width: 180px; } }
+
+  /* Start overlay */
+  .start-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 30px;
+  }
+  .start-btn {
+    background: var(--primary-green);
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    padding: 20px 50px;
+    border-radius: 60px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+    transition: transform 0.2s;
+  }
+  .start-btn:hover { transform: scale(1.05); background: #0a5252; }
+  .start-message {
+    background: var(--panel-white);
+    padding: 16px 32px;
+    border-radius: 48px;
+    color: var(--primary-green);
+    font-weight: 500;
+    font-size: 1rem;
+  }
 </style>
 </head>
 <body>
@@ -265,25 +303,32 @@
   <div class="global-timer-area">
     <div><span class="part-indicator" id="currentPartLabel">Part 1</span></div>
     <div class="global-timer" id="globalTimerDisplay">00:00</div>
-    <button id="globalEarlySubmitBtn" class="early-submit-all">Early Submit All</button>
+    <button id="globalEarlySubmitBtn" class="early-submit-all" disabled>Early Submit All</button>
     <button id="toggle-notes-btn" class="btn-sm">📝 Notes</button>
   </div>
 
   <div id="partContainer"></div>
 
   <div class="part-switch-bar" id="partSwitchBar">
-    <button class="part-btn" data-part="1">Part 1</button>
-    <button class="part-btn" data-part="2">Part 2</button>
-    <button class="part-btn" data-part="3">Part 3</button>
-    <button class="part-btn" data-part="4">Part 4</button>
+    <button class="part-btn" data-part="1" disabled>Part 1</button>
+    <button class="part-btn" data-part="2" disabled>Part 2</button>
+    <button class="part-btn" data-part="3" disabled>Part 3</button>
+    <button class="part-btn" data-part="4" disabled>Part 4</button>
   </div>
 </div>
 
 <div id="notes"><div class="side-panel-header"><span>My Notes</span><button id="notes-close" style="background:none; border:none; font-size:24px; cursor:pointer;">&times;</button></div><div id="notes-list"></div></div>
 <div id="toast">Saved</div>
 
+<!-- start overlay (user interaction required) -->
+<div id="startOverlay" class="start-overlay">
+  <div class="start-message">🎧 Click below to begin the full listening test</div>
+  <button id="startTestBtn" class="start-btn">▶ START TEST</button>
+  <div class="start-message" style="font-size: 0.85rem;">P1: 8min &nbsp;|&nbsp; P2: 7min30s &nbsp;|&nbsp; P3: 7min26s &nbsp;|&nbsp; P4: 7min &nbsp;|&nbsp; +2min review</div>
+</div>
+
 <script>
-  // ======================== ORIGINAL FULL CONTENT (preserved exactly from provided files) ========================
+  // ======================== ORIGINAL FULL CONTENT (preserved exactly) ========================
   const PART1_HTML = `<div class="group"><h4>Questions 1-10</h4><p class="instructions">Complete the notes below.<br>Write <b>ONE WORD AND/OR A NUMBER</b> for each answer.</p><h5 style="color:var(--primary-green); margin: 8px 0 4px;">Wedding arrangements – Clarence House Hotel</h5><p>Available date: <strong>1st June</strong></p><p><strong>The Oxford Suite has:</strong></p><ul style="margin-left: 0; padding-left: 0; list-style: none;"><li>- a dining room with a good view of the <strong>1</strong> <input type="text" name="q1" data-q="1" class="blank" autocomplete="off"></li><li>- a private garden for <strong>2</strong> <input type="text" name="q2" data-q="2" class="blank" autocomplete="off"> and for the wedding ceremony</li><li>- an area suitable for dancing</li></ul><p><strong>The wedding package includes:</strong></p><ul style="margin-left: 0; padding-left: 0; list-style: none;"><li>- use of the Oxford Suite</li><li>- a three-course meal</li><li>- room arranged with <strong>3</strong> <input type="text" name="q3" data-q="3" class="blank" autocomplete="off"> tables</li><li>- table <strong>4</strong> <input type="text" name="q4" data-q="4" class="blank" autocomplete="off"> included</li><li>- white tablecloths and chairs</li><li>- personalized printed <strong>5</strong> <input type="text" name="q5" data-q="5" class="blank" autocomplete="off"></li><li>- a late-evening buffet with a choice of <strong>6</strong> <input type="text" name="q6" data-q="6" class="blank" autocomplete="off"> and hot drinks</li></ul><p><strong>Music:</strong> hotel will organise a band (not included in price)</p><p>Total cost of package: £ <strong>7</strong> <input type="text" name="q7" data-q="7" class="blank" autocomplete="off"></p><p>Can also recommend a <strong>8</strong> <input type="text" name="q8" data-q="8" class="blank" autocomplete="off"> supplier (new company)</p><p>Wedding coordinator Sarah <strong>9</strong> <input type="text" name="q9" data-q="9" class="blank" autocomplete="off"></p><p>Date arranged for visit: <strong>10</strong> <input type="text" name="q10" data-q="10" class="blank" autocomplete="off"> at 11.30 a.m.</p></div><div class="results-in-page"></div>`;
 
   const PART2_HTML = `<div class="group"><h4>Questions 11-16</h4><p class="instructions">Choose the correct letter, <b>A</b>, <b>B</b> or <b>C</b>.</p><p><b>11</b> When was Eyesaver founded?</p><label><input type="radio" name="q11" value="A"> <b>A</b> 15 years ago</label><label><input type="radio" name="q11" value="B"> <b>B</b> 30 years ago</label><label><input type="radio" name="q11" value="C"> <b>C</b> 60 years ago</label><p><b>12</b> What was the original aim of the program?</p><label><input type="radio" name="q12" value="A"> <b>A</b> to offer common equipment</label><label><input type="radio" name="q12" value="B"> <b>B</b> to offer medication to children with eye diseases</label><label><input type="radio" name="q12" value="C"> <b>C</b> to offer operational help to people who had eye problems</label><p><b>13</b> The main funding comes from</p><label><input type="radio" name="q13" value="A"> <b>A</b> a monthly donation.</label><label><input type="radio" name="q13" value="B"> <b>B</b> donation from rich people.</label><label><input type="radio" name="q13" value="C"> <b>C</b> money collected on the street.</label><p><b>14</b> What does the speaker expect listeners to provide?</p><label><input type="radio" name="q14" value="A"> <b>A</b> glasses for the patients</label><label><input type="radio" name="q14" value="B"> <b>B</b> money donation</label><label><input type="radio" name="q14" value="C"> <b>C</b> voluntary work</label><p><b>15</b> What is the main purpose of this program?</p><label><input type="radio" name="q15" value="A"> <b>A</b> to show people their donation can make a difference</label><label><input type="radio" name="q15" value="B"> <b>B</b> to show people how easily eye problems can be cured</label><label><input type="radio" name="q15" value="C"> <b>C</b> to educate people about common eye diseases</label><p><b>16</b> Eyesaver advertises for the program through</p><label><input type="radio" name="q16" value="A"> <b>A</b> computers.</label><label><input type="radio" name="q16" value="B"> <b>B</b> recordings.</label><label><input type="radio" name="q16" value="C"> <b>C</b> training.</label></div><div class="group"><h4>Questions 17-20</h4><p class="instructions">What role does each of the following organisations play for the development of Eyesaver?<br>Drag the correct letter <b>A-F</b> from the box to each organisation.</p><div class="matching-flex"><div class="match-list"><div class="match-row"><span class="match-q"><b>17</b> National Vision Funding Group</span><span class="match-slot" data-q="17"></span></div><div class="match-row"><span class="match-q"><b>18</b> Eye for the Future</span><span class="match-slot" data-q="18"></span></div><div class="match-row"><span class="match-q"><b>19</b> Sam's Eyecare Institution</span><span class="match-slot" data-q="19"></span></div><div class="match-row"><span class="match-q"><b>20</b> Youth Health</span><span class="match-slot" data-q="20"></span></div></div><div class="matching-options"><strong>Features</strong><div class="drag-pool" data-reusable="false"><div class="drag-option" draggable="true" data-value="A">A gain more donation</div><div class="drag-option" draggable="true" data-value="B">B involve more children in need</div><div class="drag-option" draggable="true" data-value="C">C earn support from colleges</div><div class="drag-option" draggable="true" data-value="D">D help look for equipment manufacturers</div><div class="drag-option" draggable="true" data-value="E">E take the reputation to a higher level</div><div class="drag-option" draggable="true" data-value="F">F recruit and support staff</div></div></div></div></div><div class="results-in-page"></div>`;
@@ -301,7 +346,6 @@
     p4: { q31:'cargo', q32:'rock', q33:'inscriptions', q34:'cracks', q35:'metal', q36:'wood', q37:'handle', q38:'eclipse', q39:'calendar', q40:'clocks' }
   };
 
-  // Durations in seconds: P1=480 (8:00), P2=450 (7:30), P3=446 (7:26), P4=420 (7:00)
   const DURATIONS = [480, 450, 446, 420];
   const AUDIO_FILES = [
     "P1 Wedding arrangements.mp3",
@@ -316,8 +360,7 @@
   let scheduleTimeouts = [];
   let allPartsCompleted = false;
   let reviewTimeoutId = null;
-  let currentPlayingAudio = null;
-  let currentPartPlaying = 0;
+  let examStarted = false;
 
   function showToast(msg) { let t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1500); }
   function updateGlobalTimerDisplay() { 
@@ -388,13 +431,15 @@
           else { correct=ANSWERS.p3match[`q${i}`]; let slot=document.querySelector(`.match-slot[data-q="${i}"] .tag`); user=slot?slot.dataset.value:'—'; isCorrect=user===correct; }
         }
         else { correct=ANSWERS.p4[`q${i}`]; user=document.querySelector(`input[name="q${i}"]`)?.value.trim() || '—'; isCorrect=user.toLowerCase()===correct.toLowerCase(); }
-        table += `<tr><td style="font-weight:600">${i}</td><td>${user}</td><td>${correct}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td></tr>`;
+        table += `<tr><td style="font-weight:600">${i}</td><td>${escapeHtml(user)}</td><td>${correct}</td><td class="${isCorrect?'result-correct':'result-incorrect'}">${isCorrect?'✔ Correct':'✖ Incorrect'}</td></tr>`;
       }
       table += '</tbody></table>';
       resultsDiv.innerHTML = table;
     }
     showToast("Test completed. Final review displayed.");
   }
+
+  function escapeHtml(s) { return s.replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
   function initDragDropForPart() {
     const dragOptions = document.querySelectorAll('.drag-option');
@@ -443,6 +488,8 @@
     document.getElementById('currentPartLabel').innerText = `Part ${part}`;
     if(partStatus[part].submitted) container.classList.add('disabled-input');
     else container.classList.remove('disabled-input');
+    let existingBtn = container.querySelector('.part-submit-btn');
+    if(existingBtn) existingBtn.remove();
     let submitBtn = document.createElement('button');
     submitBtn.textContent = `Submit Part ${part}`;
     submitBtn.className = 'part-submit-btn';
@@ -459,8 +506,6 @@
       if(partStatus[idx+1].submitted) { idx++; playNext(); return; }
       let audio = new Audio(AUDIO_FILES[idx]);
       audioElements[idx] = audio;
-      currentPlayingAudio = audio;
-      currentPartPlaying = idx+1;
       audio.play().catch(e => console.warn("Audio play error:", e));
       let durationMs = DURATIONS[idx] * 1000;
       let timeoutId = setTimeout(() => {
@@ -477,7 +522,19 @@
     playNext();
   }
 
+  function startExam() {
+    if(examStarted) return;
+    examStarted = true;
+    document.getElementById('startOverlay').style.display = 'none';
+    document.getElementById('globalEarlySubmitBtn').disabled = false;
+    document.querySelectorAll('.part-btn').forEach(btn => btn.disabled = false);
+    loadPart(1);
+    playSequentialAudio();
+    globalInterval = setInterval(()=>{ if(!allPartsCompleted && !reviewTimeoutId) globalTimerSeconds++; updateGlobalTimerDisplay(); }, 1000);
+  }
+
   function earlySubmitAllHandler() {
+    if(!examStarted) { showToast("Test not started yet."); return; }
     if(confirm("Early submit all parts? Test will end immediately.")) {
       for(let p=1;p<=4;p++) if(!partStatus[p].submitted && !partStatus[p].finishedAudio) markPartSubmitted(p);
       checkAllPartsCompletion();
@@ -486,12 +543,11 @@
 
   function init() {
     loadPart(1);
-    document.querySelectorAll('.part-btn').forEach(btn => btn.addEventListener('click', (e) => { let p = parseInt(e.target.dataset.part); loadPart(p); }));
+    document.querySelectorAll('.part-btn').forEach(btn => btn.addEventListener('click', (e) => { if(examStarted) loadPart(parseInt(e.target.dataset.part)); else showToast("Start the test first."); }));
     document.getElementById('globalEarlySubmitBtn').addEventListener('click', earlySubmitAllHandler);
     document.getElementById('toggle-notes-btn').addEventListener('click',()=>document.body.classList.toggle('notes-open'));
     document.getElementById('notes-close').addEventListener('click',()=>document.body.classList.remove('notes-open'));
-    playSequentialAudio();
-    globalInterval = setInterval(()=>{ if(!allPartsCompleted && !reviewTimeoutId) globalTimerSeconds++; updateGlobalTimerDisplay(); }, 1000);
+    document.getElementById('startTestBtn').addEventListener('click', startExam);
   }
   init();
 </script>
